@@ -13,14 +13,17 @@ import { modules } from '@/data/modules';
 import { PlanSelection, PlanTemplate } from '@/types/plan';
 import { ShoppingCart, Check, Zap, MessageCircle, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useSellers } from '@/hooks/useSellers';
 
 export const PlanBuilder: React.FC = () => {
   const { toast } = useToast();
+  const { registerSellerClick, getSellerById } = useSellers();
   const [selectedSegment, setSelectedSegment] = useState<'food' | 'varejo'>('food');
   const [selectedPlan, setSelectedPlan] = useState<string>('');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [moduleQuantities, setModuleQuantities] = useState<Record<string, number>>({});
   const [isAnnualPlan, setIsAnnualPlan] = useState(false);
+  const [currentSeller, setCurrentSeller] = useState<string | null>(null);
   const [moduleHelpLinks, setModuleHelpLinks] = useState<Record<string, string>>({});
   const [modulePlanPrices, setModulePlanPrices] = useState<Record<string, Record<string, number>>>({});
   const [planModuleConfig, setPlanModuleConfig] = useState<Record<string, { mandatoryModules: string[]; optionalModules: string[] }>>({});
@@ -41,6 +44,23 @@ export const PlanBuilder: React.FC = () => {
     isSpinbox: boolean;
     availablePlans: string[];
   }>>({});
+
+  // Detectar vendedor na URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sellerId = urlParams.get('seller');
+    const planId = urlParams.get('plan');
+    
+    if (sellerId) {
+      setCurrentSeller(sellerId);
+      
+      // Se um plano específico foi passado, selecionar automaticamente
+      if (planId && plans[planId]) {
+        setSelectedPlan(planId);
+        setSelectedSegment(plans[planId].segment as 'food' | 'varejo');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -326,13 +346,33 @@ export const PlanBuilder: React.FC = () => {
     // Registrar clique no plano
     await recordPlanClick(selectedPlan);
 
+    // Registrar clique do vendedor se houver
+    if (currentSeller) {
+      try {
+        await registerSellerClick(currentSeller, selectedPlan);
+      } catch (error) {
+        console.error('Erro ao registrar clique do vendedor:', error);
+      }
+    }
+
     const message = generateWhatsAppMessage();
-    const whatsappUrl = `https://wa.me/5541991898178?text=${message}`;
+    
+    // Usar WhatsApp do vendedor se disponível, senão usar o padrão
+    let whatsappNumber = '5541991898178'; // Número padrão
+    if (currentSeller) {
+      const seller = getSellerById(currentSeller);
+      if (seller && seller.whatsappNumber) {
+        whatsappNumber = seller.whatsappNumber;
+      }
+    }
+    
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
     window.open(whatsappUrl, '_blank');
     
+    const sellerName = currentSeller ? getSellerById(currentSeller)?.name : '';
     toast({
       title: "Redirecionando...",
-      description: "Você será direcionado para o WhatsApp para finalizar sua compra.",
+      description: `Você será direcionado para o WhatsApp${sellerName ? ` do vendedor ${sellerName}` : ''} para finalizar sua compra.`,
     });
   };
 
@@ -550,6 +590,30 @@ export const PlanBuilder: React.FC = () => {
         </p>
       </div>
 
+      {/* Banner do Vendedor */}
+      {currentSeller && (
+        <div className="mb-6">
+          <Card className="border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-950">
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                  {getSellerById(currentSeller)?.name?.charAt(0) || 'V'}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100">
+                    Atendimento com {getSellerById(currentSeller)?.name || 'Vendedor'}
+                  </h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Você está sendo atendido por um de nossos especialistas. 
+                    Ao finalizar a compra, será direcionado diretamente para o WhatsApp do seu vendedor.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Seleção de Segmento e Template */}
         <div className="lg:col-span-2 space-y-6">
@@ -592,12 +656,22 @@ export const PlanBuilder: React.FC = () => {
 
               <div>
                 <label className="text-sm font-medium mb-2 block">Plano Base</label>
-                <Select value={selectedPlan} onValueChange={value => {
+                <Select value={selectedPlan} onValueChange={async (value) => {
                   setSelectedPlan(value);
                   setModuleQuantities({}); // Limpa tudo ao trocar de plano
                   // Registrar visualização do plano
                   if (value) {
                     recordPlanView(value);
+                    
+                    // Registrar clique do vendedor se houver
+                    if (currentSeller) {
+                      try {
+                        await registerSellerClick(currentSeller, value);
+                        console.log('Clique do vendedor registrado:', currentSeller, value);
+                      } catch (error) {
+                        console.error('Erro ao registrar clique do vendedor:', error);
+                      }
+                    }
                   }
                 }}>
                   <SelectTrigger>

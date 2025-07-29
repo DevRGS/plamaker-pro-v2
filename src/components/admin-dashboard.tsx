@@ -14,6 +14,8 @@ import { plans } from '@/data/plans';
 // import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Settings, BarChart3, DollarSign, Save, Eye, Plus, Trash2, X, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { SellerManagement } from '@/components/seller-management';
+import { useSellers } from '@/hooks/useSellers';
 
 interface AdminSettings {
   annualDiscount: number;
@@ -50,6 +52,7 @@ interface AdminSettings {
 
 export const AdminDashboard: React.FC = () => {
   const { toast } = useToast();
+  const { sellerClicks } = useSellers();
   
   // Estado inicial dos dados administrativos
   const [settings, setSettings] = useState<AdminSettings>({
@@ -782,6 +785,50 @@ export const AdminDashboard: React.FC = () => {
     };
   };
 
+  // Função para calcular estatísticas de localização dos vendedores
+  const calculateLocationStats = () => {
+    const filteredSellerClicks = sellerClicks.filter(click => {
+      const clickDate = new Date(click.timestamp);
+      const startDate = new Date(dateFilter.startDate + 'T00:00:00.000Z');
+      const endDate = new Date(dateFilter.endDate + 'T23:59:59.999Z');
+      
+      return clickDate >= startDate && clickDate <= endDate;
+    });
+
+    // Estatísticas por estado
+    const clicksByState = filteredSellerClicks.reduce((acc, click) => {
+      const state = click.location?.state || 'Não identificado';
+      acc[state] = (acc[state] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Estatísticas por estado e plano
+    const clicksByStateAndPlan = filteredSellerClicks.reduce((acc, click) => {
+      const state = click.location?.state || 'Não identificado';
+      const planId = click.planId;
+      
+      if (!acc[state]) {
+        acc[state] = {};
+      }
+      
+      acc[state][planId] = (acc[state][planId] || 0) + 1;
+      return acc;
+    }, {} as Record<string, Record<string, number>>);
+
+    // Top 5 estados com mais cliques
+    const topStates = Object.entries(clicksByState)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5);
+
+    return {
+      totalSellerClicks: filteredSellerClicks.length,
+      clicksByState,
+      clicksByStateAndPlan,
+      topStates,
+      uniqueStates: Object.keys(clicksByState).length
+    };
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="flex justify-between items-center mb-8">
@@ -798,10 +845,14 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       <Tabs defaultValue="dashboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="sellers" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Vendedores
           </TabsTrigger>
           <TabsTrigger value="plan-templates" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
@@ -978,6 +1029,91 @@ export const AdminDashboard: React.FC = () => {
                 <p className="text-xs text-muted-foreground">
                   taxa de conversão
                 </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Estatísticas de Localização */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Cliques por Estado</CardTitle>
+                <CardDescription>
+                  Distribuição geográfica dos cliques dos vendedores
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {calculateLocationStats().topStates.length > 0 ? (
+                  <div className="space-y-3">
+                    {calculateLocationStats().topStates.map(([state, clicks]) => (
+                      <div key={state} className="flex justify-between items-center p-3 border rounded-lg">
+                        <div>
+                          <div className="font-medium">{state}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {((clicks / calculateLocationStats().totalSellerClicks) * 100).toFixed(1)}% do total
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-primary">
+                            {clicks}
+                          </div>
+                          <div className="text-xs text-muted-foreground">cliques</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    <div className="text-lg font-medium mb-2">Nenhum clique por localização</div>
+                    <div className="text-sm">
+                      Os cliques com localização dos vendedores aparecerão aqui
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Cliques por Plano por Estado</CardTitle>
+                <CardDescription>
+                  Preferências de planos por região
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {Object.keys(calculateLocationStats().clicksByStateAndPlan).length > 0 ? (
+                  <div className="space-y-4 max-h-80 overflow-y-auto">
+                    {Object.entries(calculateLocationStats().clicksByStateAndPlan)
+                      .sort(([,a], [,b]) => 
+                        Object.values(b).reduce((sum, clicks) => sum + clicks, 0) - 
+                        Object.values(a).reduce((sum, clicks) => sum + clicks, 0)
+                      )
+                      .map(([state, planClicks]) => (
+                        <div key={state} className="border rounded-lg p-3">
+                          <div className="font-medium mb-2">{state}</div>
+                          <div className="space-y-1">
+                            {Object.entries(planClicks)
+                              .sort(([,a], [,b]) => b - a)
+                              .map(([planId, clicks]) => (
+                                <div key={planId} className="flex justify-between items-center text-sm">
+                                  <span className="text-muted-foreground">
+                                    {plans[planId]?.name || planId}
+                                  </span>
+                                  <Badge variant="outline">{clicks}</Badge>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    <div className="text-lg font-medium mb-2">Nenhum dado disponível</div>
+                    <div className="text-sm">
+                      Dados de planos por estado aparecerão aqui
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -1184,6 +1320,10 @@ export const AdminDashboard: React.FC = () => {
           </Card>
 
 
+        </TabsContent>
+
+        <TabsContent value="sellers">
+          <SellerManagement />
         </TabsContent>
 
         <TabsContent value="plan-templates">

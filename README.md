@@ -1,73 +1,209 @@
-# Welcome to your Lovable project
+# PlanMaker Pro - Sistema de Planos e Vendedores
 
-## Project info
+Um sistema completo para gerenciamento de planos, vendedores e análise de conversões com tracking geográfico.
 
-**URL**: https://lovable.dev/projects/08f66c0f-6f14-4952-ab83-af121a92d97a
+## 🚀 Funcionalidades
 
-## How can I edit this code?
+### Dashboard Administrativo
+- ✅ **Gestão de Clientes**: Adicione clientes com botão "Novo Cliente" especificando plano e valor
+- ✅ **Métricas Completas**: Receita total, receita média, taxa de conversão, plano mais popular
+- ✅ **Análise por Período**: Filtros de data para visualizar dados específicos
+- ✅ **Cliques por Plano**: Monitoramento em tempo real dos cliques
 
-There are several ways of editing your application.
+### Sistema de Vendedores
+- ✅ **Gestão de Vendedores**: Cadastro completo com dados pessoais e WhatsApp
+- ✅ **Links Personalizados**: Geração automática de links únicos por vendedor
+- ✅ **Tracking Automático**: Registro de cliques com localização geográfica
+- ✅ **WhatsApp Direcionado**: Clientes são direcionados para o WhatsApp específico do vendedor
 
-**Use Lovable**
+### Analytics Geográficos
+- ✅ **Coleta de Localização**: Captura automática via IP e GPS (com permissão)
+- ✅ **Cliques por Estado**: Visualização da distribuição geográfica
+- ✅ **Planos por Região**: Análise de preferências regionais
+- ✅ **Dashboards Visuais**: Gráficos e estatísticas em tempo real
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/08f66c0f-6f14-4952-ab83-af121a92d97a) and start prompting.
+### Configuração de Planos
+- ✅ **Preços Dinâmicos**: Configuração de preços mensais e anuais
+- ✅ **Módulos Personalizados**: Criação de módulos e spinboxes
+- ✅ **Templates de Negócio**: Configurações pré-definidas por tipo de negócio
+- ✅ **Limites de Planos**: Definição de módulos obrigatórios e opcionais
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Tecnologias
 
-**Use your preferred IDE**
+- **Frontend**: React 18 + TypeScript + Vite
+- **UI**: Tailwind CSS + shadcn/ui
+- **Database**: Supabase
+- **Deployment**: GitHub Pages
+- **Analytics**: Geolocalização via APIs gratuitas
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 📦 Instalação
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Clone o repositório:
+```bash
+git clone https://github.com/seu-usuario/planmaker-pro.git
+cd planmaker-pro
+```
 
-Follow these steps:
+2. Instale as dependências:
+```bash
+npm install
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. Configure as variáveis de ambiente:
+```bash
+cp .env.example .env.local
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+4. Configure o Supabase:
+- Crie um projeto no [Supabase](https://supabase.com)
+- Execute as migrações SQL da pasta `supabase/migrations/`
+- Adicione as credenciais no `.env.local`
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+5. Execute o projeto:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 🚀 Deploy no GitHub Pages
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Configuração Automática
 
-**Use GitHub Codespaces**
+O projeto está configurado para deploy automático via GitHub Actions:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+1. **Fork/Clone** este repositório
+2. **Configure os Secrets** no GitHub:
+   - `VITE_SUPABASE_URL`: URL do seu projeto Supabase
+   - `VITE_SUPABASE_ANON_KEY`: Chave anônima do Supabase
 
-## What technologies are used for this project?
+3. **Ative o GitHub Pages**:
+   - Vá em Settings > Pages
+   - Source: GitHub Actions
+   - O deploy será automático a cada push na branch `main`
 
-This project is built with:
+### Deploy Manual
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+# Build do projeto
+npm run build
 
-## How can I deploy this project?
+# Deploy para GitHub Pages
+npm run deploy
+```
 
-Simply open [Lovable](https://lovable.dev/projects/08f66c0f-6f14-4952-ab83-af121a92d97a) and click on Share -> Publish.
+## 💼 Como Usar
 
-## Can I connect a custom domain to my Lovable project?
+### Para Administradores
 
-Yes, you can!
+1. **Acesse o Admin**: `/admin` (requer autenticação)
+2. **Gerencie Vendedores**: Aba "Vendedores" no dashboard
+3. **Configure Planos**: Defina preços e módulos
+4. **Monitore Analytics**: Visualize conversões e geografia
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Para Vendedores
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. **Receba seu Link**: Administrador gera link personalizado
+2. **Compartilhe**: Use o link em suas campanhas
+3. **Monitore Resultados**: Veja estatísticas no painel admin
+
+### Para Clientes
+
+1. **Acesse via Link**: Link direto do vendedor (opcional)
+2. **Configure Plano**: Escolha segmento e módulos
+3. **Finalize no WhatsApp**: Direcionamento automático para vendedor
+
+## 🔗 Estrutura de Links
+
+### Link Geral do Vendedor
+```
+https://seu-site.github.io/planmaker-pro/#/plans?seller=VENDEDOR_ID
+```
+
+### Link Específico por Plano
+```
+https://seu-site.github.io/planmaker-pro/#/plans?seller=VENDEDOR_ID&plan=PLANO_ID
+```
+
+## 📊 Funcionalidades de Analytics
+
+### Dashboard Principal
+- Total de cliques por período
+- Receita total e média
+- Taxa de conversão geral
+- Plano mais popular
+
+### Analytics Geográficos
+- Distribuição por estado
+- Preferências regionais de planos
+- Top 5 estados com mais cliques
+- Mapa de calor (futuro)
+
+### Métricas por Vendedor
+- Cliques totais por vendedor
+- Estados de atuação
+- Planos mais vendidos
+- Taxa de conversão individual
+
+## 🔧 Configuração Avançada
+
+### Módulos Personalizados
+1. Acesse "Módulos Custom" no admin
+2. Defina nome, preço e configurações
+3. Associe a planos específicos
+
+### Templates de Negócio
+1. Crie em "Templates Negócio"
+2. Configure módulos pré-selecionados
+3. Disponibilize para segmentos específicos
+
+### Spinboxes e Limites
+1. Configure em "Limites Planos"
+2. Defina quantidades base e máximas
+3. Marque como somente leitura se necessário
+
+## 🌍 Sistema de Localização
+
+### Detecção Automática
+- **GPS**: Primeiro tenta GPS (mais preciso)
+- **IP**: Fallback para geolocalização por IP
+- **Normalização**: Estados brasileiros padronizados
+
+### APIs Utilizadas
+- `ipapi.co`: Geolocalização por IP (gratuita)
+- `bigdatacloud.net`: Reverse geocoding (gratuita)
+- Navegador: Geolocalização GPS nativa
+
+## 📱 Responsividade
+
+- Design totalmente responsivo
+- Mobile-first approach
+- Suporte a touch gestures
+- Performance otimizada
+
+## 🔒 Segurança e Privacidade
+
+- Dados armazenados no Supabase (GDPR compliant)
+- Localização coletada apenas para analytics
+- Números de WhatsApp criptografados
+- Row Level Security (RLS) no Supabase
+
+## 🚀 Deploy Customizado
+
+Para personalizar o deploy:
+
+1. Altere `base` em `vite.config.ts` para seu domínio
+2. Configure CNAME para domínio customizado
+3. Ajuste variáveis de ambiente conforme necessário
+
+## 📞 Suporte
+
+- **Issues**: Use o GitHub Issues para bugs
+- **Features**: Sugira melhorias via Pull Requests
+- **Docs**: Documentação completa em `/docs`
+
+## 📄 Licença
+
+MIT License - veja [LICENSE](LICENSE) para detalhes.
+
+---
+
+**PlanMaker Pro** - Construído com ❤️ para vendas eficientes e analytics precisos.
