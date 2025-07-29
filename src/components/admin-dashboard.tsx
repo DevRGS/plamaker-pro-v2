@@ -376,18 +376,25 @@ export const AdminDashboard: React.FC = () => {
   // Carregar vendedores da Supabase
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase
-        .from('sellers')
-        .select('*')
-        .order('createdAt', { ascending: false });
-      
-      if (error) {
-        console.error('Erro ao carregar vendedores:', error);
-        return;
-      }
-      
-      if (data) {
-        setVendedores(data);
+      try {
+        console.log('🔍 Carregando vendedores da tabela sellers...');
+        
+        const { data, error } = await supabase
+          .from('sellers')
+          .select('*')
+          .order('createdAt', { ascending: false });
+        
+        if (error) {
+          console.error('❌ Erro ao carregar vendedores:', error);
+          return;
+        }
+        
+        if (data) {
+          console.log('✅ Vendedores carregados:', data.length);
+          setVendedores(data);
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar vendedores:', error);
       }
     })();
   }, []);
@@ -810,9 +817,15 @@ export const AdminDashboard: React.FC = () => {
     }
     
     try {
+      console.log('📝 Criando novo vendedor:', newVendedor);
+      
+      // Gerar ID único baseado no timestamp
+      const newId = Date.now().toString();
+      
       const { data, error } = await supabase
         .from('sellers')
         .insert([{
+          id: newId,
           name: newVendedor.name,
           email: newVendedor.email,
           phone: newVendedor.whatsappNumber,
@@ -823,6 +836,7 @@ export const AdminDashboard: React.FC = () => {
         .single();
       
       if (error) {
+        console.error('❌ Erro ao criar vendedor:', error);
         toast({
           title: "Erro",
           description: "Erro ao criar vendedor: " + error.message,
@@ -831,6 +845,7 @@ export const AdminDashboard: React.FC = () => {
         return;
       }
       
+      console.log('✅ Vendedor criado:', data);
       setVendedores(prev => [data, ...prev]);
       setNewVendedor({ name: '', email: '', whatsappNumber: '' });
       setShowNewVendedorModal(false);
@@ -840,6 +855,7 @@ export const AdminDashboard: React.FC = () => {
         description: "Vendedor criado com sucesso!",
       });
     } catch (error) {
+      console.error('❌ Erro ao criar vendedor:', error);
       toast({
         title: "Erro",
         description: "Erro ao criar vendedor.",
@@ -850,12 +866,15 @@ export const AdminDashboard: React.FC = () => {
 
   const handleDeleteVendedor = async (vendedorId: string) => {
     try {
+      console.log('🗑️ Deletando vendedor:', vendedorId);
+      
       const { error } = await supabase
         .from('sellers')
         .delete()
         .eq('id', vendedorId);
       
       if (error) {
+        console.error('❌ Erro ao deletar vendedor:', error);
         toast({
           title: "Erro",
           description: "Erro ao deletar vendedor: " + error.message,
@@ -864,6 +883,7 @@ export const AdminDashboard: React.FC = () => {
         return;
       }
       
+      console.log('✅ Vendedor deletado com sucesso');
       setVendedores(prev => prev.filter(v => v.id !== vendedorId));
       
       toast({
@@ -871,6 +891,7 @@ export const AdminDashboard: React.FC = () => {
         description: "Vendedor deletado com sucesso!",
       });
     } catch (error) {
+      console.error('❌ Erro ao deletar vendedor:', error);
       toast({
         title: "Erro",
         description: "Erro ao deletar vendedor.",
