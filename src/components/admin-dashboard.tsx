@@ -162,10 +162,10 @@ export const AdminDashboard: React.FC = () => {
     name: string;
     email: string;
     phone: string;
-    isActive: boolean;
-    createdAt: string;
-    updatedAt: string;
-    whatsappNumber: string;
+    isactive: boolean;
+    createdat: string;
+    updatedat: string;
+    whatsappnumber: string;
   }>>([]);
   const [dateFilter, setDateFilter] = useState<{
     startDate: string;
@@ -382,7 +382,7 @@ export const AdminDashboard: React.FC = () => {
         const { data, error } = await supabase
           .from('sellers')
           .select('*')
-          .order('createdAt', { ascending: false });
+          .order('createdat', { ascending: false });
         
         if (error) {
           console.error('❌ Erro ao carregar vendedores:', error);
@@ -822,18 +822,18 @@ export const AdminDashboard: React.FC = () => {
       // Gerar ID único baseado no timestamp
       const newId = Date.now().toString();
       
-      const { data, error } = await supabase
-        .from('sellers')
-        .insert([{
-          id: newId,
-          name: newVendedor.name,
-          email: newVendedor.email,
-          phone: newVendedor.whatsappNumber,
-          whatsappNumber: newVendedor.whatsappNumber,
-          isActive: true
-        }])
-        .select()
-        .single();
+              const { data, error } = await supabase
+          .from('sellers')
+          .insert([{
+            id: newId,
+            name: newVendedor.name,
+            email: newVendedor.email,
+            phone: newVendedor.whatsappNumber,
+            whatsappnumber: newVendedor.whatsappNumber,
+            isactive: true
+          }])
+          .select()
+          .single();
       
       if (error) {
         console.error('❌ Erro ao criar vendedor:', error);
@@ -2212,16 +2212,16 @@ export const AdminDashboard: React.FC = () => {
                             <div className="flex-1">
                                                           <div className="flex items-center gap-2 mb-2">
                               <h3 className="font-semibold">{vendedor.name}</h3>
-                              <Badge variant={vendedor.isActive ? "default" : "secondary"}>
-                                {vendedor.isActive ? "Ativo" : "Inativo"}
-                              </Badge>
+                                                         <Badge variant={vendedor.isactive ? "default" : "secondary"}>
+                             {vendedor.isactive ? "Ativo" : "Inativo"}
+                           </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground mb-1">
                               Email: {vendedor.email}
                             </p>
-                            <p className="text-sm text-muted-foreground mb-3">
-                              WhatsApp: {vendedor.whatsappNumber}
-                            </p>
+                                                     <p className="text-sm text-muted-foreground mb-3">
+                           WhatsApp: {vendedor.whatsappnumber}
+                         </p>
                               <div className="space-y-2">
                                 <Label className="text-sm font-medium">Link do Vendedor:</Label>
                                 <div className="flex gap-2">

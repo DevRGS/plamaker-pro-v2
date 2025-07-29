@@ -57,7 +57,7 @@ export const PlanBuilder: React.FC<PlanBuilderProps> = ({ vendedorId }) => {
           console.log('🔍 Buscando vendedor com ID:', vendedorId);
           
           // Usar fetch direto para evitar problemas de RLS
-          const response = await fetch(`https://cmntbwbkyxnydojpouyh.supabase.co/rest/v1/sellers?id=eq.${vendedorId}&isActive=eq.true&select=whatsappNumber,name`, {
+                           const response = await fetch(`https://cmntbwbkyxnydojpouyh.supabase.co/rest/v1/sellers?id=eq.${vendedorId}&isactive=eq.true&select=whatsappnumber,name`, {
             headers: {
               'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbnRid2JreXhueWRvanBvdXloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzNTQ4MDQsImV4cCI6MjA2ODkzMDgwNH0.8_4K0H42JEulrMnm5M5KTEKvC0lA7Ae2uwtba2YRNnE',
               'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbnRid2JreXhueWRvanBvdXloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzNTQ4MDQsImV4cCI6MjA2ODkzMDgwNH0.8_4K0H42JEulrMnm5M5KTEKvC0lA7Ae2uwtba2YRNnE'
@@ -68,8 +68,8 @@ export const PlanBuilder: React.FC<PlanBuilderProps> = ({ vendedorId }) => {
             const data = await response.json();
             if (data && data.length > 0) {
               const vendedor = data[0];
-              setVendedorWhatsapp(vendedor.whatsappNumber);
-              console.log(`✅ Vendedor encontrado: ${vendedor.name} - WhatsApp: ${vendedor.whatsappNumber}`);
+                                   setVendedorWhatsapp(vendedor.whatsappnumber);
+                     console.log(`✅ Vendedor encontrado: ${vendedor.name} - WhatsApp: ${vendedor.whatsappnumber}`);
             } else {
               console.log('⚠️ Vendedor não encontrado ou inativo');
             }
