@@ -153,17 +153,19 @@ export const AdminDashboard: React.FC = () => {
   });
   const [showNewVendedorModal, setShowNewVendedorModal] = useState(false);
   const [newVendedor, setNewVendedor] = useState({
-    nome: '',
+    name: '',
     email: '',
-    whatsapp: ''
+    whatsappNumber: ''
   });
   const [vendedores, setVendedores] = useState<Array<{
     id: string;
-    nome: string;
+    name: string;
     email: string;
-    whatsapp: string;
-    ativo: boolean;
-    created_at: string;
+    phone: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+    whatsappNumber: string;
   }>>([]);
   const [dateFilter, setDateFilter] = useState<{
     startDate: string;
@@ -375,9 +377,9 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase
-        .from('vendedores')
+        .from('sellers')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('createdAt', { ascending: false });
       
       if (error) {
         console.error('Erro ao carregar vendedores:', error);
@@ -798,7 +800,7 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleAddVendedor = async () => {
-    if (!newVendedor.nome || !newVendedor.email || !newVendedor.whatsapp) {
+    if (!newVendedor.name || !newVendedor.email || !newVendedor.whatsappNumber) {
       toast({
         title: "Erro",
         description: "Por favor, preencha todos os campos.",
@@ -809,12 +811,13 @@ export const AdminDashboard: React.FC = () => {
     
     try {
       const { data, error } = await supabase
-        .from('vendedores')
+        .from('sellers')
         .insert([{
-          nome: newVendedor.nome,
+          name: newVendedor.name,
           email: newVendedor.email,
-          whatsapp: newVendedor.whatsapp,
-          ativo: true
+          phone: newVendedor.whatsappNumber,
+          whatsappNumber: newVendedor.whatsappNumber,
+          isActive: true
         }])
         .select()
         .single();
@@ -829,7 +832,7 @@ export const AdminDashboard: React.FC = () => {
       }
       
       setVendedores(prev => [data, ...prev]);
-      setNewVendedor({ nome: '', email: '', whatsapp: '' });
+      setNewVendedor({ name: '', email: '', whatsappNumber: '' });
       setShowNewVendedorModal(false);
       
       toast({
@@ -848,7 +851,7 @@ export const AdminDashboard: React.FC = () => {
   const handleDeleteVendedor = async (vendedorId: string) => {
     try {
       const { error } = await supabase
-        .from('vendedores')
+        .from('sellers')
         .delete()
         .eq('id', vendedorId);
       
@@ -2186,18 +2189,18 @@ export const AdminDashboard: React.FC = () => {
                         <Card key={vendedor.id} className="p-4">
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h3 className="font-semibold">{vendedor.nome}</h3>
-                                <Badge variant={vendedor.ativo ? "default" : "secondary"}>
-                                  {vendedor.ativo ? "Ativo" : "Inativo"}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground mb-1">
-                                Email: {vendedor.email}
-                              </p>
-                              <p className="text-sm text-muted-foreground mb-3">
-                                WhatsApp: {vendedor.whatsapp}
-                              </p>
+                                                          <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold">{vendedor.name}</h3>
+                              <Badge variant={vendedor.isActive ? "default" : "secondary"}>
+                                {vendedor.isActive ? "Ativo" : "Inativo"}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-1">
+                              Email: {vendedor.email}
+                            </p>
+                            <p className="text-sm text-muted-foreground mb-3">
+                              WhatsApp: {vendedor.whatsappNumber}
+                            </p>
                               <div className="space-y-2">
                                 <Label className="text-sm font-medium">Link do Vendedor:</Label>
                                 <div className="flex gap-2">
@@ -2411,11 +2414,11 @@ export const AdminDashboard: React.FC = () => {
             
             <div className="space-y-4">
               <div>
-                <Label htmlFor="vendedor-nome">Nome do Vendedor</Label>
+                <Label htmlFor="vendedor-name">Nome do Vendedor</Label>
                 <Input
-                  id="vendedor-nome"
-                  value={newVendedor.nome}
-                  onChange={(e) => setNewVendedor(prev => ({ ...prev, nome: e.target.value }))}
+                  id="vendedor-name"
+                  value={newVendedor.name}
+                  onChange={(e) => setNewVendedor(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="Nome completo do vendedor"
                 />
               </div>
@@ -2435,8 +2438,8 @@ export const AdminDashboard: React.FC = () => {
                 <Label htmlFor="vendedor-whatsapp">WhatsApp</Label>
                 <Input
                   id="vendedor-whatsapp"
-                  value={newVendedor.whatsapp}
-                  onChange={(e) => setNewVendedor(prev => ({ ...prev, whatsapp: e.target.value }))}
+                  value={newVendedor.whatsappNumber}
+                  onChange={(e) => setNewVendedor(prev => ({ ...prev, whatsappNumber: e.target.value }))}
                   placeholder="5541999999999"
                 />
                 <p className="text-xs text-muted-foreground mt-1">

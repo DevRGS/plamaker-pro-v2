@@ -53,10 +53,10 @@ export const PlanBuilder: React.FC<PlanBuilderProps> = ({ vendedorId }) => {
       (async () => {
         try {
           const { data, error } = await supabase
-            .from('vendedores')
-            .select('whatsapp, nome')
+            .from('sellers')
+            .select('whatsappNumber, name')
             .eq('id', vendedorId)
-            .eq('ativo', true)
+            .eq('isActive', true)
             .single();
           
           if (error) {
@@ -65,8 +65,8 @@ export const PlanBuilder: React.FC<PlanBuilderProps> = ({ vendedorId }) => {
           }
           
           if (data) {
-            setVendedorWhatsapp(data.whatsapp);
-            console.log(`Vendedor encontrado: ${data.nome} - WhatsApp: ${data.whatsapp}`);
+            setVendedorWhatsapp(data.whatsappNumber);
+            console.log(`Vendedor encontrado: ${data.name} - WhatsApp: ${data.whatsappNumber}`);
           }
         } catch (error) {
           console.error('Erro ao buscar vendedor:', error);
