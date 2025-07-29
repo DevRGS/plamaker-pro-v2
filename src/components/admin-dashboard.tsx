@@ -881,7 +881,7 @@ export const AdminDashboard: React.FC = () => {
 
   const generateVendedorLink = (vendedorId: string) => {
     const baseUrl = window.location.origin + window.location.pathname;
-    return `${baseUrl}#/plans/${vendedorId}`;
+    return `${baseUrl}#/plans?seller=${vendedorId}`;
   };
 
   // Função para calcular cliques filtrados por data

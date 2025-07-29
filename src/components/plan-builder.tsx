@@ -49,9 +49,13 @@ export const PlanBuilder: React.FC<PlanBuilderProps> = ({ vendedorId }) => {
 
   // Buscar dados do vendedor quando vendedorId for fornecido
   useEffect(() => {
+    console.log('🔍 PlanBuilder - vendedorId recebido:', vendedorId);
+    
     if (vendedorId) {
       (async () => {
         try {
+          console.log('🔍 Buscando vendedor com ID:', vendedorId);
+          
           const { data, error } = await supabase
             .from('sellers')
             .select('whatsappNumber, name')
@@ -60,18 +64,22 @@ export const PlanBuilder: React.FC<PlanBuilderProps> = ({ vendedorId }) => {
             .single();
           
           if (error) {
-            console.error('Erro ao buscar vendedor:', error);
+            console.error('❌ Erro ao buscar vendedor:', error);
             return;
           }
           
           if (data) {
             setVendedorWhatsapp(data.whatsappNumber);
-            console.log(`Vendedor encontrado: ${data.name} - WhatsApp: ${data.whatsappNumber}`);
+            console.log(`✅ Vendedor encontrado: ${data.name} - WhatsApp: ${data.whatsappNumber}`);
+          } else {
+            console.log('⚠️ Vendedor não encontrado ou inativo');
           }
         } catch (error) {
-          console.error('Erro ao buscar vendedor:', error);
+          console.error('❌ Erro ao buscar vendedor:', error);
         }
       })();
+    } else {
+      console.log('ℹ️ Nenhum vendedorId fornecido, usando número padrão');
     }
   }, [vendedorId]);
 
@@ -361,6 +369,8 @@ export const PlanBuilder: React.FC<PlanBuilderProps> = ({ vendedorId }) => {
 
     const message = generateWhatsAppMessage();
     const whatsappUrl = `https://wa.me/${vendedorWhatsapp}?text=${message}`;
+    console.log(`📱 Abrindo WhatsApp com número: ${vendedorWhatsapp}`);
+    console.log(`🔗 URL: ${whatsappUrl}`);
     window.open(whatsappUrl, '_blank');
     
     toast({
