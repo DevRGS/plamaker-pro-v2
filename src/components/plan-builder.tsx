@@ -370,12 +370,12 @@ export const PlanBuilder: React.FC<PlanBuilderProps> = ({ vendedorId }) => {
     console.log(`🎯 Vendedor ativo: ${vendedorWhatsapp}`);
     console.log(`📋 Plano selecionado: ${selectedPlan}`);
 
-    // Tentar registrar clique (sem bloquear se falhar)
-    try {
-      await recordPlanClick(selectedPlan);
-    } catch (error) {
-      console.log('⚠️ Erro ao registrar clique (não crítico):', error);
-    }
+    // Temporariamente desabilitado para focar no sistema de vendedores
+    // try {
+    //   await recordPlanClick(selectedPlan);
+    // } catch (error) {
+    //   console.log('⚠️ Erro ao registrar clique (não crítico):', error);
+    // }
 
     const message = generateWhatsAppMessage();
     const whatsappUrl = `https://wa.me/${vendedorWhatsapp}?text=${message}`;

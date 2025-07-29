@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Vendedores</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste Sistema de Vendedores</h1>
+    
+    <div class="test">
+        <h3>1. Teste Conexão Supabase</h3>
+        <button onclick="testSupabaseConnection()">Testar Conexão</button>
+        <div id="connection-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>2. Teste Buscar Vendedores</h3>
+        <button onclick="testFetchVendedores()">Buscar Vendedores</button>
+        <div id="vendedores-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>3. Teste Vendedor Específico</h3>
+        <button onclick="testVendedorEspecifico()">Buscar Kamila (ID: 1753805630667)</button>
+        <div id="vendedor-especifico-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>4. Teste WhatsApp</h3>
+        <button onclick="testWhatsApp()">Testar WhatsApp da Kamila</button>
+        <div id="whatsapp-result"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://cmntbwbkyxnydojpouyh.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbnRid2JreXhueWRvanBvdXloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzNTQ4MDQsImV4cCI6MjA2ODkzMDgwNH0.8_4K0H42JEulrMnm5M5KTEKvC0lA7Ae2uwtba2YRNnE";
+
+        async function testSupabaseConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.innerHTML = '<p>Testando...</p>';
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/sellers?select=count`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `<div class="success"><p>✅ Conexão OK! Tabela sellers encontrada.</p><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error"><p>❌ Erro: ${response.status} ${response.statusText}</p></div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error"><p>❌ Erro: ${error.message}</p></div>`;
+            }
+        }
+
+        async function testFetchVendedores() {
+            const resultDiv = document.getElementById('vendedores-result');
+            resultDiv.innerHTML = '<p>Buscando...</p>';
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/sellers?select=*`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `<div class="success"><p>✅ Vendedores encontrados: ${data.length}</p><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error"><p>❌ Erro: ${response.status} ${response.statusText}</p></div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error"><p>❌ Erro: ${error.message}</p></div>`;
+            }
+        }
+
+        async function testVendedorEspecifico() {
+            const resultDiv = document.getElementById('vendedor-especifico-result');
+            resultDiv.innerHTML = '<p>Buscando...</p>';
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/sellers?id=eq.1753805630667&isactive=eq.true&select=whatsappnumber,name`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.length > 0) {
+                        const vendedor = data[0];
+                        resultDiv.innerHTML = `<div class="success"><p>✅ Vendedor encontrado: ${vendedor.name}</p><p>WhatsApp: ${vendedor.whatsappnumber}</p><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+                    } else {
+                        resultDiv.innerHTML = `<div class="error"><p>❌ Vendedor não encontrado ou inativo</p></div>`;
+                    }
+                } else {
+                    resultDiv.innerHTML = `<div class="error"><p>❌ Erro: ${response.status} ${response.statusText}</p></div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error"><p>❌ Erro: ${error.message}</p></div>`;
+            }
+        }
+
+        function testWhatsApp() {
+            const resultDiv = document.getElementById('whatsapp-result');
+            const whatsappNumber = '5541991626645';
+            const message = encodeURIComponent('Olá! Gostaria de saber mais sobre os planos.');
+            const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
+            
+            resultDiv.innerHTML = `<div class="success"><p>✅ WhatsApp da Kamila configurado!</p><p>Número: ${whatsappNumber}</p><p><a href="${whatsappUrl}" target="_blank">🔗 Abrir WhatsApp</a></p></div>`;
+        }
+    </script>
+</body>
+</html>
