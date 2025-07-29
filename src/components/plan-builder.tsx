@@ -14,7 +14,11 @@ import { PlanSelection, PlanTemplate } from '@/types/plan';
 import { ShoppingCart, Check, Zap, MessageCircle, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-export const PlanBuilder: React.FC = () => {
+interface PlanBuilderProps {
+  vendedorId?: string;
+}
+
+export const PlanBuilder: React.FC<PlanBuilderProps> = ({ vendedorId }) => {
   const { toast } = useToast();
   const [selectedSegment, setSelectedSegment] = useState<'food' | 'varejo'>('food');
   const [selectedPlan, setSelectedPlan] = useState<string>('');
@@ -41,6 +45,35 @@ export const PlanBuilder: React.FC = () => {
     isSpinbox: boolean;
     availablePlans: string[];
   }>>({});
+  const [vendedorWhatsapp, setVendedorWhatsapp] = useState<string>('5541991898178'); // Número padrão
+
+  // Buscar dados do vendedor quando vendedorId for fornecido
+  useEffect(() => {
+    if (vendedorId) {
+      (async () => {
+        try {
+          const { data, error } = await supabase
+            .from('vendedores')
+            .select('whatsapp, nome')
+            .eq('id', vendedorId)
+            .eq('ativo', true)
+            .single();
+          
+          if (error) {
+            console.error('Erro ao buscar vendedor:', error);
+            return;
+          }
+          
+          if (data) {
+            setVendedorWhatsapp(data.whatsapp);
+            console.log(`Vendedor encontrado: ${data.nome} - WhatsApp: ${data.whatsapp}`);
+          }
+        } catch (error) {
+          console.error('Erro ao buscar vendedor:', error);
+        }
+      })();
+    }
+  }, [vendedorId]);
 
   useEffect(() => {
     (async () => {
@@ -327,7 +360,7 @@ export const PlanBuilder: React.FC = () => {
     await recordPlanClick(selectedPlan);
 
     const message = generateWhatsAppMessage();
-    const whatsappUrl = `https://wa.me/5541991898178?text=${message}`;
+    const whatsappUrl = `https://wa.me/${vendedorWhatsapp}?text=${message}`;
     window.open(whatsappUrl, '_blank');
     
     toast({

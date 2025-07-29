@@ -151,6 +151,20 @@ export const AdminDashboard: React.FC = () => {
     planType: 'monthly' as 'monthly' | 'annual',
     value: 0
   });
+  const [showNewVendedorModal, setShowNewVendedorModal] = useState(false);
+  const [newVendedor, setNewVendedor] = useState({
+    nome: '',
+    email: '',
+    whatsapp: ''
+  });
+  const [vendedores, setVendedores] = useState<Array<{
+    id: string;
+    nome: string;
+    email: string;
+    whatsapp: string;
+    ativo: boolean;
+    created_at: string;
+  }>>([]);
   const [dateFilter, setDateFilter] = useState<{
     startDate: string;
     endDate: string;
@@ -352,6 +366,29 @@ export const AdminDashboard: React.FC = () => {
     (async () => {
       await supabase.from('admin_settings').upsert({
         setting_key: 'spinboxLimits',
+        setting_value: settings.spinboxLimits
+      }, { onConflict: 'setting_key' });
+    })();
+  }, [settings.spinboxLimits]);
+
+  // Carregar vendedores da Supabase
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from('vendedores')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Erro ao carregar vendedores:', error);
+        return;
+      }
+      
+      if (data) {
+        setVendedores(data);
+      }
+    })();
+  }, []);
         setting_value: settings.spinboxLimits
       }, { onConflict: 'setting_key' });
     })();
@@ -760,6 +797,90 @@ export const AdminDashboard: React.FC = () => {
     setCustomers(prev => prev.filter(c => c.id !== customerId));
   };
 
+  const handleAddVendedor = async () => {
+    if (!newVendedor.nome || !newVendedor.email || !newVendedor.whatsapp) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha todos os campos.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('vendedores')
+        .insert([{
+          nome: newVendedor.nome,
+          email: newVendedor.email,
+          whatsapp: newVendedor.whatsapp,
+          ativo: true
+        }])
+        .select()
+        .single();
+      
+      if (error) {
+        toast({
+          title: "Erro",
+          description: "Erro ao criar vendedor: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setVendedores(prev => [data, ...prev]);
+      setNewVendedor({ nome: '', email: '', whatsapp: '' });
+      setShowNewVendedorModal(false);
+      
+      toast({
+        title: "Sucesso",
+        description: "Vendedor criado com sucesso!",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao criar vendedor.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteVendedor = async (vendedorId: string) => {
+    try {
+      const { error } = await supabase
+        .from('vendedores')
+        .delete()
+        .eq('id', vendedorId);
+      
+      if (error) {
+        toast({
+          title: "Erro",
+          description: "Erro ao deletar vendedor: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setVendedores(prev => prev.filter(v => v.id !== vendedorId));
+      
+      toast({
+        title: "Sucesso",
+        description: "Vendedor deletado com sucesso!",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao deletar vendedor.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const generateVendedorLink = (vendedorId: string) => {
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}#/plans/${vendedorId}`;
+  };
+
   // Função para calcular cliques filtrados por data
   const calculateFilteredClicks = () => {
     const filteredClicks = planClicksWithDate.filter(click => {
@@ -798,7 +919,7 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       <Tabs defaultValue="dashboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Dashboard
@@ -826,6 +947,10 @@ export const AdminDashboard: React.FC = () => {
           <TabsTrigger value="custom-modules" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Módulos Custom
+          </TabsTrigger>
+          <TabsTrigger value="vendedores" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Vendedores
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -2028,6 +2153,93 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </TabsContent>
 
+        <TabsContent value="vendedores">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Gerenciar Vendedores</CardTitle>
+                    <CardDescription>
+                      Crie e gerencie vendedores para gerar links específicos
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => setShowNewVendedorModal(true)} className="bg-gradient-to-r from-primary to-primary-glow">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo Vendedor
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {vendedores.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">Nenhum vendedor encontrado</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Clique em "Novo Vendedor" para criar o primeiro vendedor
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4">
+                      {vendedores.map((vendedor) => (
+                        <Card key={vendedor.id} className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="font-semibold">{vendedor.nome}</h3>
+                                <Badge variant={vendedor.ativo ? "default" : "secondary"}>
+                                  {vendedor.ativo ? "Ativo" : "Inativo"}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-1">
+                                Email: {vendedor.email}
+                              </p>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                WhatsApp: {vendedor.whatsapp}
+                              </p>
+                              <div className="space-y-2">
+                                <Label className="text-sm font-medium">Link do Vendedor:</Label>
+                                <div className="flex gap-2">
+                                  <Input
+                                    value={generateVendedorLink(vendedor.id)}
+                                    readOnly
+                                    className="text-sm"
+                                  />
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(generateVendedorLink(vendedor.id));
+                                      toast({
+                                        title: "Link copiado!",
+                                        description: "Link do vendedor copiado para a área de transferência.",
+                                      });
+                                    }}
+                                  >
+                                    Copiar
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteVendedor(vendedor.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
         <TabsContent value="settings">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
@@ -2176,6 +2388,75 @@ export const AdminDashboard: React.FC = () => {
                 className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
               >
                 Adicionar Cliente
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Novo Vendedor */}
+      {showNewVendedorModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Novo Vendedor</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowNewVendedorModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="vendedor-nome">Nome do Vendedor</Label>
+                <Input
+                  id="vendedor-nome"
+                  value={newVendedor.nome}
+                  onChange={(e) => setNewVendedor(prev => ({ ...prev, nome: e.target.value }))}
+                  placeholder="Nome completo do vendedor"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="vendedor-email">Email</Label>
+                <Input
+                  id="vendedor-email"
+                  type="email"
+                  value={newVendedor.email}
+                  onChange={(e) => setNewVendedor(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="email@exemplo.com"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="vendedor-whatsapp">WhatsApp</Label>
+                <Input
+                  id="vendedor-whatsapp"
+                  value={newVendedor.whatsapp}
+                  onChange={(e) => setNewVendedor(prev => ({ ...prev, whatsapp: e.target.value }))}
+                  placeholder="5541999999999"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Digite apenas os números (ex: 5541999999999)
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setShowNewVendedorModal(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleAddVendedor}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+              >
+                Criar Vendedor
               </Button>
             </div>
           </div>
