@@ -9,6 +9,11 @@ const Plans = () => {
   // Usar sellerId da query string ou vendedorId da rota
   const finalSellerId = sellerId || vendedorId;
   
+  console.log('🔍 Plans.tsx - Parâmetros capturados:');
+  console.log('  - vendedorId (rota):', vendedorId);
+  console.log('  - sellerId (query):', sellerId);
+  console.log('  - finalSellerId:', finalSellerId);
+  
   return <PlanBuilder vendedorId={finalSellerId} />;
 };
 

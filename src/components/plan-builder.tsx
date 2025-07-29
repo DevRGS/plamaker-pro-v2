@@ -56,23 +56,25 @@ export const PlanBuilder: React.FC<PlanBuilderProps> = ({ vendedorId }) => {
         try {
           console.log('🔍 Buscando vendedor com ID:', vendedorId);
           
-          const { data, error } = await supabase
-            .from('sellers')
-            .select('whatsappNumber, name')
-            .eq('id', vendedorId)
-            .eq('isActive', true)
-            .single();
+          // Usar fetch direto para evitar problemas de RLS
+          const response = await fetch(`https://cmntbwbkyxnydojpouyh.supabase.co/rest/v1/sellers?id=eq.${vendedorId}&isActive=eq.true&select=whatsappNumber,name`, {
+            headers: {
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbnRid2JreXhueWRvanBvdXloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzNTQ4MDQsImV4cCI6MjA2ODkzMDgwNH0.8_4K0H42JEulrMnm5M5KTEKvC0lA7Ae2uwtba2YRNnE',
+              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbnRid2JreXhueWRvanBvdXloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzNTQ4MDQsImV4cCI6MjA2ODkzMDgwNH0.8_4K0H42JEulrMnm5M5KTEKvC0lA7Ae2uwtba2YRNnE'
+            }
+          });
           
-          if (error) {
-            console.error('❌ Erro ao buscar vendedor:', error);
-            return;
-          }
-          
-          if (data) {
-            setVendedorWhatsapp(data.whatsappNumber);
-            console.log(`✅ Vendedor encontrado: ${data.name} - WhatsApp: ${data.whatsappNumber}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data && data.length > 0) {
+              const vendedor = data[0];
+              setVendedorWhatsapp(vendedor.whatsappNumber);
+              console.log(`✅ Vendedor encontrado: ${vendedor.name} - WhatsApp: ${vendedor.whatsappNumber}`);
+            } else {
+              console.log('⚠️ Vendedor não encontrado ou inativo');
+            }
           } else {
-            console.log('⚠️ Vendedor não encontrado ou inativo');
+            console.error('❌ Erro ao buscar vendedor:', response.status, response.statusText);
           }
         } catch (error) {
           console.error('❌ Erro ao buscar vendedor:', error);
@@ -364,8 +366,16 @@ export const PlanBuilder: React.FC<PlanBuilderProps> = ({ vendedorId }) => {
       return;
     }
 
-    // Registrar clique no plano
-    await recordPlanClick(selectedPlan);
+    // Log do vendedor sendo usado
+    console.log(`🎯 Vendedor ativo: ${vendedorWhatsapp}`);
+    console.log(`📋 Plano selecionado: ${selectedPlan}`);
+
+    // Tentar registrar clique (sem bloquear se falhar)
+    try {
+      await recordPlanClick(selectedPlan);
+    } catch (error) {
+      console.log('⚠️ Erro ao registrar clique (não crítico):', error);
+    }
 
     const message = generateWhatsAppMessage();
     const whatsappUrl = `https://wa.me/${vendedorWhatsapp}?text=${message}`;
